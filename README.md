@@ -1,2 +1,2 @@
 # exerciseProjects
-exercise
+在学习angular的过程中做的一些练习
