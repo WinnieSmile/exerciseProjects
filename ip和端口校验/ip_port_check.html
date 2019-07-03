@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>校验ip和端口</title>
+    <link rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/3.3.7/css/bootstrap.min.css">  
+	<script src="https://cdn.staticfile.org/jquery/2.1.1/jquery.min.js"></script>
+	<script src="https://cdn.staticfile.org/twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <script src="https://cdn.bootcss.com/angular.js/1.5.5/angular.min.js"></script>
+    <script src="https://cdn.bootcss.com/angular-ui-bootstrap/0.11.2/ui-bootstrap-tpls.min.js"></script>
+</head>
+<style>
+    .div1{
+        width: 50%;
+        padding-top: 30px; 
+        margin: auto;
+    }
+    table{
+        border-collapse: collapse;
+    }
+    th,td{
+        text-align: center;      /* 在html里边加align="center"的话只会水平居中 */
+    }
+    /*表单不符合要求：带红框*/
+	.ng-invalid{
+        border-width:1px!important;
+        border-color: #e66a7b!important;
+    }
+    .case1{   /*IP符合规规则，显示为蓝色*/
+        color: blue;
+    }   
+    .case2{  /* IP不符合规则，显示为红色 */
+        color:red;
+    } 
+    
+</style>
+<body ng-app="myApp">
+    <div ng-controller="myCtrl">
+        <div class="div1">           
+            <button class="btn btn-info" ng-click="openModal(res)" style="margin-bottom: 14px; float: right;">添加</button>            
+            <table class="table table-bordered table-hover">
+                <thead>  <!-- 在这里添加 align="center" 不起作用？？ -->
+                    <tr>
+                        <th>id</th>
+                        <th>ip</th>
+                        <th>端口</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr ng-repeat="item in arr">
+                        <td>{{item.id}}</td>
+                        <td>
+                            {{item.ip}}
+                            <!-- <button ng-if="item.ip == '' " class="btn btn-info" disabled style="width: 80px;height: 20px;font-size: 12px;">立即去绑定</button> -->
+                            <button ng-if="item.ip == '' " class="btn btn-info" ng-click="openModal1(item.id)" style="width: 80px;height: 30px;font-size: 12px;">立即去绑定</button>                            
+                            <!-- ng-if用来判断ip是否为空,当ip为空的时候给它一个立即去绑定的按钮 -->
+                            <!-- 给模态框传入一个参数item.id,将该id作为标识来判断当前是哪条数据 -->
+                        </td>
+                        <td>{{item.port}}</td>
+                        <td>
+                            <button class="btn btn-danger" ng-click="del($index)">删除</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <!--添加的模态框-->
+        <script type="text/ng-template" id="myModal.html">
+            <div>
+                <div class="modal-header" style="margin-right:15px;margin-left:15px;padding-left:0;font-size:18px;font-weight:bold;color:blank;">
+                    <button type="button" class="close" data-dismiss="modal" ng-click="cancel()"><span aria-hidden="true">×</span></button>               
+                    <span class="modal-title">添加信息</span>   
+                </div>  
+                <div class="modal-body">         
+                    <div class="col-sm-12 text-center">
+                        <form class="form-horizontal modal-form" name="addForm" novalidate="novalidate">
+                            <div class="form-group">
+                                <label class="col-md-3 control-label label-title">id</label>
+                                <div class="col-md-6">
+                                    <input type="text" class="form-control" name="ipName" ng-model="ipId" placeholder="请输入id" required>
+                                    <span ng-class="{'case1':checkId(),'case2':!checkId()}">
+                                        <span ng-show='addForm.idName.$dirty'>{{uu0}}</span>
+                                    </span>
+                                    
+                                </div>                        
+                            </div> 
+                            <div class="form-group">
+                                <label class="col-md-3 control-label label-title">ip</label>
+                                <div class="col-md-6">
+                                    <input type="text" id="" class="form-control" name="iipNum" ng-model="iipNum" placeholder="请输入ip">
+                                    <span ng-class="{'case1':checkIip(),'case2':!checkIip()}">
+                                        <span ng-show='addForm.iipNum.$dirty'>{{iu}}</span>   <!-- ng-show是不能缺少的 -->
+                                    </span>     
+
+                                </div>                        
+                            </div>   
+                            <div class="form-group">
+                                <label class="col-md-3 control-label label-title">端口</label>
+                                <div class="col-md-6">
+                                    <input type="text" id="" class="form-control" name="usPort" ng-model="usPort" placeholder="请输入端口">
+                                    <span ng-class="{'case1':checkPort(),'case2':!checkPort()}">
+                                        <span ng-show='addForm.usPort.$dirty'>{{po}}</span>
+                                    </span>
+                                </div>                        
+                            </div>  
+                               
+                        </form>
+                    </div> 
+                    </form>          
+                </div>
+                <div class="modal-footer" style="border:none;padding-top:0;">
+                    <button class="btn btn-default" ng-click="cancel()">  
+                        取消
+                    </button>
+                    <button class="btn btn-success" ng-click="ok(type)">  <!-- type:保存时候的参数。传一个参数type，这个参数用来判断是否保存 -->
+                        保存
+                    </button> 
+                </div>
+            </div>           
+        </script>
+        <!--end-->
+
+        <!--立即绑定的模态框-->
+        <script type="text/ng-template" id="modal.html">
+            <div>
+                <div class="modal-header" style="margin-right:15px;margin-left:15px;padding-left:0;font-size:18px;font-weight:bold;color:blank;">
+                    <button type="button" class="close" data-dismiss="modal" ng-click="cancel()"><span aria-hidden="true">×</span></button>               
+                    <span class="modal-title">绑定ip</span>   
+                </div>  
+                <div class="modal-body">  
+                    <div class="col-sm-12 text-center">
+                        <form class="form-horizontal modal-form" name="bindForm" novalidate="novalidate">
+                            <div class="form-group">
+                                <label class="col-md-3 control-label label-title">ip</label>
+                                <div class="col-md-6">
+                                    <input type="text" class="form-control" name="ipNum" ng-model="ipNum" placeholder="请输入ip" required>
+                                    <span ng-class="{'case1':checkIp(),'case2':!checkIp()}">
+                                        <span ng-show='bindForm.ipNum.$dirty'>{{pp}}</span>
+                                    </span>
+                                </div>                        
+                            </div>                             
+                        </form>
+                    </div>           
+                </div>
+                <div class="modal-footer" style="border:none;padding-top:0;">
+                    <button class="btn btn-default" ng-click="cancel()">  
+                        取消
+                    </button>
+                    <button class="btn btn-success" ng-click="ok(type)">
+                        保存
+                    </button> 
+                </div>
+            </div>           
+        </script>
+        <!--end-->
+    </div>
+
+    <script>
+        var app = angular.module('myApp',['ui.bootstrap']);
+        app.controller('myCtrl',function($scope,$rootScope,$modal){
+            $rootScope.arr = [
+                {id:'0', ip:'111.155.155', port:3306},
+                {id:'1', ip:'', port:3306},
+                {id:'2', ip:'', port:3306},
+                {id:'3', ip:'144.155.155', port:3306}
+            ]
+            $scope.del = function($index){    //删除这一行的数据
+                $scope.arr.splice($index,1);
+            }
+            //打开"添加"功能的模态框
+            $scope.openModal = function(res){  //注意这里的参数res是上边ng-click="openModal(res)" 中绑定的参数
+                        
+                var modalInstance = $modal.open({    
+                    templateUrl : 'myModal.html',  
+                    controller : 'myModalCtrl',       
+                    resolve : {                       
+                        item : function() {                                 
+                            return res;  
+                            console.log('111');         
+                        }
+                    }
+                })
+            }
+            //打开"立即去绑定"的模态框
+            $scope.openModal1 = function(id){     //传入id,来判断是哪条数据的模态框
+                console.log(id);
+                var modalInstance = $modal.open({     
+                    templateUrl : 'modal.html',  
+                    controller : 'modalCtrl',                        
+                    resolve : {                       
+                        data : function() {     
+                            // console.log('222');
+                            return id;           
+                        }
+                    }
+                })
+            }
+        })
+        //添加功能的模态框的控制器
+        app.controller('myModalCtrl',function($rootScope,$scope,$modalInstance,item,$modal,){    
+            //校验id
+
+            //校验ip
+            $scope.iu = ''
+            $scope.checkIip = function(){  
+                //155.155.155.155  符合规则  
+                // var reg = "^((25[0-5]|2[0-4]\\d|[1]{1}\\d{1}\\d{1}|[1-9]{1}\\d{1}|\\d{1})($|(?!\\.$)\\.)){4}$";             
+                var reg = /^(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])$/
+                if (reg.test($scope.iipNum)) {
+                    $scope.iu='IP符合规则'
+                    return true; 
+                }else{
+                    $scope.iu='IP不符合规则'
+                    return false;
+                }              
+            } 
+            //校验端口
+            $scope.po = ''
+            $scope.checkPort = function(){   
+                //格式为：              
+                var reg = /^([0-9]|[1-9]\d{1,3}|[1-5]\d{4}|6[0-4]\d{4}|65[0-4]\d{2}|655[0-2]\d|6553[0-5])$/
+                if (reg.test($scope.usPort)) {
+                    $scope.po='端口符合规则'
+                    return true; 
+                }else{
+                    $scope.po='端口不符合规则'
+                    return false;
+                }              
+            }             
+            $scope.ok = function() {       //保存               
+				$modalInstance.close('type');
+                $scope.array={
+                    id:$scope.ipId,
+                    ip:$scope.iipNum,
+                    port:$scope.usPort
+                };
+                $rootScope.arr.push($scope.array);
+			};
+            $scope.cancel = function() {  //取消
+                $modalInstance.dismiss();
+			}
+        })
+
+        //立即去绑定的模态框的控制器
+        app.controller('modalCtrl',function($rootScope,$scope,$modalInstance,data,$modal){  
+            //校验ip            
+            console.log(data);
+            $scope.pp = ''
+            $scope.checkIp = function(){  
+                // console.log();
+                //155.155.155.155  符合规则  
+                // var reg = "^((25[0-5]|2[0-4]\\d|[1]{1}\\d{1}\\d{1}|[1-9]{1}\\d{1}|\\d{1})($|(?!\\.$)\\.)){4}$";             
+                var reg = /^(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])$/
+                if (reg.test($scope.ipNum)) {
+                    $scope.pp='IP符合规则'
+                    return true; 
+                }else{
+                    $scope.pp='IP不符合规则'
+                    return false;
+                }              
+            } 
+            //校验ip的自定义指令：？？？
+            // app.directive('test',function(){
+            //     return{
+            //         restrict: 'AE',
+            //         require: 'ngModel',
+            //         link: function (scope,data,ngModel){
+            //             // console.log(ngmodel)
+            //             var regExp = /^([0-9]|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.([0-9]|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.([0-9]|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.([0-9]|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])$/im;               
+            //             if (regExp.test($scope.ipNum)) {
+            //                 return true;    //这里做个提示？？
+            //             } else {
+            //                return false;    //这里做个提示？？
+            //             }
+            //         }
+            //     }
+            // })
+
+            //执行取消关闭操作
+            $scope.ok = function() {
+                console.log('查看id有没有传过来',data);      //data表示的是传过来的id
+				$modalInstance.close();
+                //原来那一条数据中没有ip,给它添加一个ip; 
+                $scope.array={                   
+                    ip:$scope.ipNum,                    
+                };
+                // console.log('查看id1',data);
+                // console.log('添加',$scope.array)
+                $rootScope.arr[data].ip = $scope.array.ip;  //此处的data表示的是数据的下标, 当列表中的序列是从0-N的时候,此处data就是之前的id,此处data表示的是index
+                console.log($rootScope.arr[data]);
+                // $rootScope.arr[data-1].ip = $scope.array.ip;   //当列表中的序列是从1-N的时候,注意此处data是给index-1,,也就是给id-1,即arr[data-1]              
+                // console.log($rootScope.arr[data-1]);
+                //下标是从0开始的。
+			};
+            $scope.cancel = function() {
+                $modalInstance.dismiss('cancel');
+			}
+        })
+        
+    </script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- 参考：https://blog.csdn.net/iteye_9648/article/details/82601517 -->
+<!-- 参考：https://blog.csdn.net/zhao14725/article/details/83089213 -->
